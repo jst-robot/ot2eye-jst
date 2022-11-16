@@ -14,12 +14,6 @@ python3 -m pip install -r requirements.txt
 
 ## 必要ライブラリ
 
-- PyTorch
-
-  ```
-  python3 -m pip install torch
-  ```
-
 - OpenCV
 
   ```
@@ -65,7 +59,7 @@ yolov5/utils/plots.py
   # cv2.rectangle(self.im, p1, p2, color, -1, cv2.LINE_AA)  # filled
   ```
 
-* 107~113行目をコメントアウトし，114~119行目追加
+* 107〜113行目をコメントアウトし，114〜119行目追加
 
   ```
   cv2.putText(self.im,
@@ -89,9 +83,3 @@ yolov5/utils/plots.py
   ```
 
   
-
-```
-cv2.rectangle(self.im, p1, p2, color, thickness=self.lw, lineType=cv2.LINE_AA)
-```
-
-↓
