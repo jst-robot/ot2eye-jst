@@ -10,6 +10,10 @@ from scripts.trim_tip_rack import Trim_Tip_Rack
 
 class OT2Eye():
 	def __init__(self, img_dir, out_dir, model_labware, model_tip, threshold, train_yaml):
+		#
+		# パラメータ
+		#
+
 		# img_dir: 推論画像ディレクトリ
 		# out_dir: 結果保存ディレクトリ
 		# threshold: 検出閾値
@@ -19,6 +23,10 @@ class OT2Eye():
 		self.OUT_DIR_IMG_RESIZE = "images_resize" #縮小画像保存ディレクトリ
 		self.OUT_DIR_DETECT_LABWARE = "detect_labware" #ラボウェア検出結果ディレクトリ
 		self.OUT_DIR_IMG_TRIM = "image_trim_tip_rack"# チップラックトリミング画像ディレクトリ
+
+		#
+		# ディレクトリ処理
+		#
 
 		# 画像ディレクトリ存在確認
 		if not os.path.isdir(img_dir):
@@ -41,11 +49,15 @@ class OT2Eye():
 					out_dir = out_dir_cdd
 					break
 		
+		#
 		# 画像の縮小＆保存
+		#
 		self.resize_save_img(img_dir, out_dir, WIDTH_SMALL)
 
-		print("\n\nfin\n\n")
+		
+		#
 		# ラボウェア検出
+		#
 		subprocess.run(["python3", "yolov5/detect.py",\
 				# 検出対象画像ディレクトリ
 				"--source", out_dir+"/"+self.OUT_DIR_IMG_RESIZE,\
@@ -64,9 +76,10 @@ class OT2Eye():
 				# 検出結果上書き
 				"--exist-ok"])
 
-		print("\n\nfin\n\n")
 
+		#
 		# 検出結果からトリミング画像生成
+		#
 		if not os.path.isdir(out_dir+"/"+self.OUT_DIR_IMG_TRIM): #存在しなければ生成
 			os.mkdir(out_dir+"/"+self.OUT_DIR_IMG_TRIM)
 		trim = Trim_Tip_Rack(\
