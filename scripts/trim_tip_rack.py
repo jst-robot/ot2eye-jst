@@ -26,7 +26,8 @@ class Trim_Tip_Rack():
 
 		# loop for all file in original image directory
 		for file_num in range(FILE_NUM):
-			label_name[file_num] = img_name[file_num][:img_name[file_num].rfind(".")]+".txt"
+			# label_name[file_num] = img_name[file_num][:img_name[file_num].rfind(".")]+".txt"
+			label_name[file_num] = img_name[file_num].rsplit(".",1)[0]+".txt"
 
 			# image size
 			ori_img = cv2.imread(origin_dir_path + img_name[file_num])
@@ -35,6 +36,11 @@ class Trim_Tip_Rack():
 
 			# label text 
 			labels = None
+
+			# ラベルがなければ飛ばす
+			if not os.path.isfile(label_dir_path+label_name[file_num]):
+				continue
+
 			with open(label_dir_path+label_name[file_num], 'r') as txtfile:
 				reader = csv.reader(txtfile, delimiter=" ")
 				labels = [row for row in reader]

@@ -1,6 +1,0 @@
-train: /home/koki/bioinfo/obj_rec/dataset/20220624_small_notip/train/images/
-val: /home/koki/bioinfo/obj_rec/dataset/20220624_small_notip/val/images/
-
-nc: 3
-
-names: ['well_plate_6', 'well_plate_96', 'tip_rack']
