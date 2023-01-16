@@ -2,23 +2,82 @@
 
 
 
-## インストール
+## install
 
 ```
-git clone --recursive git@github.com:bioinfo-tsukuba/ot2eye.git
-cd ot2eye/yolov5/
-python3 -m pip install -r requirements.txt 
+$ git clone --recursive git@github.com:bioinfo-tsukuba/ot2eye.git
+$ cd ot2eye/yolov5/
+$ python3 -m pip install -r requirements.txt 
 ```
 
 
 
-## 必要ライブラリ
+## Usage
+
+### Detect mode
+
+execution command
+
+~~~~
+$ python3 ot2eye.py <image_dir>
+~~~~
+
+output
+
+ot2eye/out/
+
+out1, out2, ...
+
+option
+
+- --out-dir
+  - directory path of output files.
+  - defailt: "out"
+- --model-labware
+- --model-tip
+- --threshold
+- --labware-train-yaml
+
+~~~~
+$ python3 ot2eye.py <>
+~~~~
+
+
+
+### example
+
+~~~~
+$ python3 ot2eye.py dataset/20220718_large
+~~~~
+
+
+
+
+
+## File structure
+
+ot2eye/
+    |---- model/
+        |---- detect_labware_20220624/
+        |---- detect_tip_20220624/
+        |---- dataset_20220624_small_notip.yaml
+    |---- scripts/
+        |---- trim_tip_rack.py
+        |---- obj_rec_eval.py
+    |---- yolov5/
+    |---- LICENSE
+    |---- README.md
+    |---- ot2eye.py
+
+
+
+## Required library
 
 - OpenCV
 
   ```
-  python3 -m pip install opencv-python
-  python3 -m pip install opencv-contrib-python
+  $ python3 -m pip install opencv-python
+  $ python3 -m pip install opencv-contrib-python
   ```
 
 - csv
@@ -26,6 +85,36 @@ python3 -m pip install -r requirements.txt
 - yaml
 
 - argparse
+
+
+
+
+
+## 開発メモ
+
+### 出力形式
+
+- out/
+  - images_labware/
+    - hoge.jpeg
+      ※非リサイズ画像にラボウェアとチップのbbox
+      ※bboxはラベルと確率あり（ただしチップはラベル無し）
+    - fuga.jpeg
+  - labels_labware/
+    - hoge.txt
+      ※ラボウェアとチップを統合したラベル
+    - fuga.txt
+  - images_tip/
+    - hoge_0.jpeg
+    - hoge_1.jpeg
+    - fuga_0.jpeg
+  - labels_tip/
+    - hoge_0.txt
+    - hoge_1.txt
+    - fuga_0.txt
+  - 評価.csv
+
+
 
 
 
