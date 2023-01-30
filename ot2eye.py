@@ -10,6 +10,7 @@ import shutil
 from glob import glob
 from scripts.trim_tip_rack import Trim_Tip_Rack
 from scripts.obj_rec_eval import Obj_Rec_Eval
+# from scripts.plot import Plot
 
 
 class OT2Eye():
@@ -23,9 +24,10 @@ class OT2Eye():
 		# model_tip: チップの検出モデル
 		# threshold: 検出閾値
 		# train_yaml: 訓練データに用いたyamlファイル
+		self.SEPARATOR=" " # labelファイルのセパレータ
 		WIDTH_SMALL = 640 # 縮小後画像幅
-		HIGHT_SMALL = 480 # 縮小後画像高
-		TIP_RACK_LABEL_NAME = "tip_rack"
+		HEIGHT_SMALL = 480 # 縮小後画像高
+		TIP_RACK_LABEL_NAME = "tip_rack" #チップラックのラベル名
 		DIR_TMP = "tmp" #出力一時ディレクトリ
 		DIR_TMP_IMG_RESIZE =     DIR_TMP+"/"+"images_resize" #縮小画像保存ディレクトリ
 		DIR_TMP_IMG_TRIM =       DIR_TMP+"/"+"images_trim"   #チップラックトリミング画像ディレクトリ
@@ -35,6 +37,10 @@ class OT2Eye():
 		DIR_OUT_LABWARE_LBL = "labels_labware"
 		DIR_OUT_TIP_IMG =     "images_tip"
 		DIR_OUT_TIP_LBL =     "labels_tip"
+		DIR_OUT_MERGED_IMG =  "images_merged"
+		DIR_OUT_MERGED_LBL =  "labels_merged"
+		self.width_ori = 0
+		self.height_ori = 0
 
 
 		#
@@ -67,22 +73,14 @@ class OT2Eye():
 		print("# detect labware #")
 		print("##################")
 		subprocess.run(["python3", "yolov5/detect.py",\
-				# 検出対象画像ディレクトリ
-				"--source", out_dir+"/"+DIR_TMP_IMG_RESIZE,\
-				# 検出結果出力先ディレクトリ
-				"--project", out_dir,\
-				# 検出結果ディレクトリ名
-				"--name", DIR_TMP_DETECT_LABWARE,\
-				# 検出モデル
-				"--weights", model_labware,\
-				# 検出閾値
-				"--conf", str(threshold),\
-				# 推論結果ラベル出力
-				"--save-txt",\
-				# 推論結果確率出力
-				"--save-conf",\
-				# 検出結果上書き
-				"--exist-ok"])
+				"--source", out_dir+"/"+DIR_TMP_IMG_RESIZE, # 検出対象画像ディレクトリ
+				"--project", out_dir, # 検出結果出力先ディレクトリ
+				"--name", DIR_TMP_DETECT_LABWARE, # 検出結果ディレクトリ名
+				"--weights", model_labware, # 検出モデル
+				"--conf", str(threshold), # 検出閾値
+				"--save-txt", # 推論ラベル出力
+				"--save-conf", # 推論結果確率出力
+				"--exist-ok"]) # 検出結果上書き
 		# print("# Success!")
 
 
@@ -95,20 +93,13 @@ class OT2Eye():
 		if not os.path.isdir(out_dir+"/"+DIR_TMP_IMG_TRIM): #存在しなければ生成
 			os.mkdir(out_dir+"/"+DIR_TMP_IMG_TRIM)
 		trim = Trim_Tip_Rack(\
-				# トリミング前画像ディレクトリ
-				img_dir,\
-				# ラボウェア検出結果ラベルディレクトリ
-				out_dir+"/"+DIR_TMP_DETECT_LABWARE+"/labels",\
-				# 学習時yamlファイル
-				train_yaml,\
-				# トリミング結果画像ディレクトリ
-				out_dir+"/"+DIR_TMP_IMG_TRIM,\
-				# チップラックのラベル名
-				TIP_RACK_LABEL_NAME,\
-				# トリミング結果画像幅
-				WIDTH_SMALL,\
-				# トリミング結果画像高
-				HIGHT_SMALL)
+				img_dir, # トリミング前画像ディレクトリ
+				out_dir+"/"+DIR_TMP_DETECT_LABWARE+"/labels", # ラボウェア検出結果ラベルディレクトリ
+				train_yaml, # 学習時yamlファイル
+				out_dir+"/"+DIR_TMP_IMG_TRIM, # トリミング結果画像ディレクトリ
+				TIP_RACK_LABEL_NAME, # チップラックのラベル名
+				WIDTH_SMALL, # トリミング結果画像幅
+				HEIGHT_SMALL) # トリミング結果画像高
 		# print("# Success!")
 
 
@@ -119,45 +110,131 @@ class OT2Eye():
 		print("# detect tip #")
 		print("##############")
 		subprocess.run(["python3", "yolov5/detect.py",\
-				# 検出対象画像ディレクトリ
-				"--source", out_dir+"/"+DIR_TMP_IMG_TRIM,\
-				# 検出結果出力先ディレクトリ
-				"--project", out_dir,\
-				# 検出結果ディレクトリ名
-				"--name", DIR_TMP_DETECT_TIP,\
-				# 検出モデル
-				"--weights", model_tip,\
-				# 検出閾値
-				"--conf", str(threshold),\
-				# 推論結果ラベル出力
-				"--save-txt",\
-				# 推論結果確率出力
-				"--save-conf",\
-				# 検出結果上書き
-				"--exist-ok"])
+				"--source", out_dir+"/"+DIR_TMP_IMG_TRIM, # 検出対象画像ディレクトリ
+				"--project", out_dir, # 検出結果出力先ディレクトリ
+				"--name", DIR_TMP_DETECT_TIP, # 検出結果ディレクトリ名
+				"--weights", model_tip, # 検出モデル
+				"--conf", str(threshold), # 検出閾値
+				"--save-txt", # 推論結果ラベル出力
+				"--save-conf", # 推論結果確率出力
+				"--exist-ok"])# 検出結果上書き
 		# print("# Success!")
 
 
 		#
 		# 総合検出結果出力
 		#
-		print("####################")
-		print("# result integrate #")
-		print("####################")
+		print("################")
+		print("# result merge #")
+		print("################")
 		# サブ出力ディレクトリ生成
 		os.mkdir(out_dir+"/"+DIR_OUT_LABWARE_IMG)
 		os.mkdir(out_dir+"/"+DIR_OUT_TIP_IMG)
+		os.mkdir(out_dir+"/"+DIR_OUT_MERGED_IMG)
 
-		#ラボウェア検出結果ファイルコピー
+		# 統合ラベル生成
+		self.make_merge_label(\
+				out_dir+"/"+DIR_OUT_MERGED_LBL, #出力先ディレクトリ
+				out_dir+"/"+DIR_TMP_DETECT_LABWARE+"/labels/", # ラボウェアラベルディレクトリ
+				out_dir+"/"+DIR_TMP_DETECT_TIP+"/labels/", # チップラベルディレクトリ
+				train_yaml, # 学習時yamlファイル
+				TIP_RACK_LABEL_NAME, # チップラックのラベル名
+				WIDTH_SMALL, HEIGHT_SMALL) # 縮小後画像サイズ
+
+
+		#ラボウェア＆チップ検出結果画像静止絵
+		self.make_bbox_image(img_dir, out_dir+"/"+DIR_OUT_MERGED_LBL,
+				out_dir+"/"+DIR_OUT_MERGED_IMG, train_yaml)
+		#ラボウェア検出結果画像生成
 		self.make_bbox_image(img_dir, out_dir+"/"+DIR_TMP_DETECT_LABWARE+"/labels/",
 				out_dir+"/"+DIR_OUT_LABWARE_IMG, train_yaml)
-		#チップ検出結果ファイルコピー
+		#チップ検出結果画像生成
 		self.make_bbox_image(out_dir+"/"+DIR_TMP_IMG_TRIM, out_dir+"/"+DIR_TMP_DETECT_TIP+"/labels/",
 				out_dir+"/"+DIR_OUT_TIP_IMG, "tip")
 
-		# ラベル結果コピー
+		#結果ラベルコピー
 		shutil.copytree(out_dir+"/"+DIR_TMP_DETECT_LABWARE+"/labels", out_dir+"/"+DIR_OUT_LABWARE_LBL)
 		shutil.copytree(out_dir+"/"+DIR_TMP_DETECT_TIP+"/labels", out_dir+"/"+DIR_OUT_TIP_LBL)
+
+
+
+
+
+
+
+	# ラボウェア＆チップのラベル統合
+	def make_merge_label(self, out_dir, dir_labware_lbl, dir_tip_lbl, train_yaml_path, TIP_RACK_LABEL_NAME, WIDTH_SMALL, HEIGHT_SMALL):
+		TIP_LABEL_NUM  = 0 # チップのラベル番号
+		RACK_LABEL_NUM = 0 # チップラックのラベル番号
+
+		# 出力ディレクトリ生成
+		os.mkdir(out_dir)
+
+		# チップのラベル番号取得
+		with open(train_yaml_path, 'r') as yamlfile:
+			obj = yaml.safe_load(yamlfile)
+			TIP_LABEL_NUM  = obj["nc"]
+			RACK_LABEL_NUM = obj["names"].index(TIP_RACK_LABEL_NAME)
+
+
+		# ラボウェアラベルファイルループ
+		for fname_labware_label in os.listdir(dir_labware_lbl):
+			base_name_labware_label = fname_labware_label.rsplit(".",1)[0]
+
+			# 統合ラベルファイル生成
+			merge_label_file = open(out_dir+"/"+fname_labware_label, "a")			
+
+			# ラボウェアラベルファイルopen
+			with open(dir_labware_lbl+"/"+fname_labware_label, 'r') as txtfile_labware:
+				num_rack = 0 #画像内のチップラックの数
+				reader = csv.reader(txtfile_labware, delimiter=self.SEPARATOR) #ファイル読み込み
+
+				# ラベルファイルの中身の行ループ
+				for row in reader:
+					merge_label_file.write(" ".join(row)+"\n") #読み込んだ行をそのまま書き込み
+					
+					# チップラックの場合処理
+					if row[0] == str(RACK_LABEL_NUM):
+						fname_tip_label = base_name_labware_label+"_"+str(num_rack)+".txt"
+
+						# チップラベルファイルが存在すれば
+						if os.path.isfile(dir_tip_lbl+"/"+fname_tip_label):
+							# チップラベル情報取得
+							tip_label_arr = self.label_file_to_arr(dir_tip_lbl+"/"+fname_tip_label)
+
+							# ラベルファイルの中身の行のループ
+							for i in range(len(tip_label_arr)):
+								rack_pos_w  = float(row[1])
+								rack_pos_h  = float(row[2])
+								rack_size_w = float(row[3])
+								rack_size_h = float(row[4])
+								tip_pos_w  = float(tip_label_arr[i][1])
+								tip_pos_h  = float(tip_label_arr[i][2])
+								tip_size_w = float(tip_label_arr[i][3])
+								tip_size_h = float(tip_label_arr[i][4])
+
+								# チップラベルをオリジナル画像の座標系へ変換
+								rack_aspect = (rack_size_h*self.height_ori) / float(rack_size_w*self.width_ori)
+								if rack_aspect <= (HEIGHT_SMALL / float(WIDTH_SMALL)): #横長
+									resize_rate = float(WIDTH_SMALL) / float(self.width_ori*rack_size_w)
+									rack_size_h = (HEIGHT_SMALL / float(resize_rate)) / float(self.height_ori)
+								else:
+									resize_rate = float(HEIGHT_SMALL) / float(self.height_ori*rack_size_h)
+									rack_size_w = (WIDTH_SMALL / float(resize_rate)) / float(self.width_ori)
+								tip_label_arr[i][0] = str(TIP_LABEL_NUM)
+								tip_label_arr[i][1] = str(round(rack_pos_w-0.5*rack_size_w+tip_pos_w*rack_size_w, 6))
+								tip_label_arr[i][2] = str(round(rack_pos_h-0.5*rack_size_h+tip_pos_h*rack_size_h, 6))
+								tip_label_arr[i][3] = str(round(rack_size_w*tip_size_w, 6))
+								tip_label_arr[i][4] = str(round(rack_size_h*tip_size_h, 6))
+								# チップラベル情報書き込み
+								merge_label_file.write(" ".join(tip_label_arr[i])+"\n")
+
+						num_rack += 1
+
+			# 統合ラベルファイルclose
+			merge_label_file.close()
+		
+
 
 
 
@@ -167,17 +244,14 @@ class OT2Eye():
 	# 検出データからbbox付き画像生成
 	def make_bbox_image(self, ori_img_dir, label_dir, save_dir, train_yaml_path):
 		object_name = None # 検出オブジェクト名配列
-		mode = None
 
 		# 訓練yaml取得(ラベルデータ取得)
 		if train_yaml_path == "tip":
 			object_name = ["tip"]
-			mode = "tip"
 		else:
 			with open(train_yaml_path, 'r') as yamlfile:
 				obj = yaml.safe_load(yamlfile)
 				object_name = obj["names"]
-			mode = "standard"
 
 		# 元画像ループ
 		for img_name in os.listdir(ori_img_dir):
@@ -191,36 +265,44 @@ class OT2Eye():
 				img = cv2.imread(ori_img_dir+"/"+img_name)
 				# ラベルループ
 				for label_row in self.label_file_to_arr(label_dir+"/"+base_name+".txt"):
-					if mode == "standard":
-						self.label_row_to_bbox(img, label_row, object_name)
-					elif mode == "tip":
-						self.label_row_to_bbox(img, label_row, object_name, "tip")
+					self.label_row_to_bbox(img, label_row, object_name)
 				# 保存
 				cv2.imwrite(save_dir+"/"+img_name, img)
 	
 
 	# ラベル情報からbbox描画
-	def label_row_to_bbox(self, img, label_row, object_name, mode="standard"):
+	def label_row_to_bbox(self, img, label_row, object_name):
 		# 画像サイズ取得
 		height, width = img.shape[:2]
 		# ラベル情報取得
-		obj_name = object_name[int(label_row[0])]
+		if int(label_row[0]) >= len(object_name):
+			obj_name = "tip"
+		else:
+			obj_name = object_name[int(label_row[0])]
 		obj_pos_w  = width  * float(label_row[1])
 		obj_pos_h  = height * float(label_row[2])
 		obj_size_w = width  * float(label_row[3])
 		obj_size_h = height * float(label_row[4])
 		obj_prob = label_row[5]
+		# bboxの角の座標
 		obj_l = round(obj_pos_w - obj_size_w/2.0)
 		obj_r = round(obj_pos_w + obj_size_w/2.0)
 		obj_t = round(obj_pos_h - obj_size_h/2.0)
 		obj_b = round(obj_pos_h + obj_size_h/2.0)
 
+		# 色設定
+		bbox_col,txt_col = self.gen_2_color(int(label_row[0]))
+		# bbox設定
+		lw = max(round(sum(img.shape) / 2 * 0.003), 2) # line width (yolov5と同じ)
+
 		# 描画モード
-		if mode == "standard":
-			# 色設定
-			bbox_col,txt_col = self.gen_2_color(int(label_row[0]))
-			# bbox設定
-			lw = max(round(sum(img.shape) / 2 * 0.003), 2) # line width (yolov5と同じ)
+		if obj_name == "tip":
+			# bbox描画
+			cv2.rectangle(img, (obj_l, obj_t), (obj_r, obj_b), bbox_col, 1)
+			# 中心点描画
+			cv2.drawMarker(img, (round(obj_pos_w), round(obj_pos_h)), bbox_col,
+					cv2.MARKER_CROSS, round(min(obj_size_w, obj_size_h)*0.5))
+		else:
 			# テキスト設定
 			label_text  = obj_name+" "+obj_prob[0:4] # 確率は小数点以下2桁まで
 			myFontFace  = cv2.FONT_HERSHEY_SIMPLEX
@@ -236,38 +318,29 @@ class OT2Eye():
 			cv2.putText(img, label_text, (obj_l+lw, obj_t-lw),
 					myFontFace, myFontSlace, txt_col, myFontThickness)
 
-		elif mode == "tip":
-			#描画設定
-			bbox_col = (0,255,0) # green
-			lw = max(round(sum(img.shape) / 2 * 0.003), 2) # line width (yolov5と同じ)
-			# bbox描画
-			cv2.rectangle(img, (obj_l, obj_t), (obj_r, obj_b), bbox_col, 1)
-			# 中心点描画
-			cv2.drawMarker(img, (round(obj_pos_w), round(obj_pos_h)), bbox_col,
-					cv2.MARKER_CROSS, round(min(obj_size_w, obj_size_h)*0.5))
-
 
 
 	# 色2セット生成
 	def gen_2_color(self, seed):
+		# 1色目
 		if int(seed) % 6 == 0:
 			col1 = (0,255,0) # green
-			col2  = (255,255,255) # white
 		elif int(seed) % 6 == 1:
 			col1 = (255,0,0) # blue
-			col2  = (255,255,255) # white
 		elif int(seed) % 6 == 2:
 			col1 = (0,0,255) # red
-			col2  = (255,255,255) # white
 		elif int(seed) % 6 == 3:
 			col1 = (255,255,0) # cyan
-			col2  = (255,255,255) # white
 		elif int(seed) % 6 == 4:
 			col1 = (255,0,255) # magenta
-			col2  = (255,255,255) # white
 		elif int(seed) % 6 == 5:
 			col1 = (0,255,255) # yellow
+
+		# 2色目
+		if int(seed) % 6 == 5:
 			col2  = (0,0,0) # bloack
+		else:
+			col2  = (255,255,255) # white
 
 		return col1, col2
 
@@ -276,30 +349,14 @@ class OT2Eye():
 
 	# ラベルファイルから配列へ変換
 	def label_file_to_arr(self, file_path):
-		SEPARATOR = " "
 		labels = None
 		with open(file_path, 'r') as txtfile:
-			reader = csv.reader(txtfile, delimiter=SEPARATOR)
+			reader = csv.reader(txtfile, delimiter=self.SEPARATOR)
 			labels = [row for row in reader]
 
 		return labels
 
 
-
-	def make_integrate_label(self, out_dir, dir_dtc_labware, dir_dtc_tip, dir_out_labware_lbl):
-		# copy labware label
-		shutil.copytree(out_dir+"/"+dir_dtc_labware+"/labels", out_dir+"/"+dir_out_labware_lbl)
-
-		#labware label file loop
-		for label_labware in os.listdir(out_dir+"/"+dir_out_labware_lbl):
-			base_name_labware = label_labware.rsplit(".",1)[0]
-			print(label_labware)
-
-			# tip label file loop
-			for label_tip in os.listdir(out_dir+"/"+dir_dtc_tip+"/labels"):
-				# labwareラベルのベースネームとtipラベルの先頭が一致すれば
-				if label_tip.startswith(base_name_labware):
-					print(label_tip)
 
 
 
@@ -341,11 +398,14 @@ class OT2Eye():
 		for num in range(len(imgs)):
 			# read image
 			img = cv2.imread(img_dir+"/"+imgs[num])
+			# get original img size
+			self.height_ori, self.width_ori = img.shape[:2]
 			# resize
 			h, w = img.shape[:2]
 			height = round(h * (width / w))
 			img = cv2.resize(img, dsize=(width, height))
 			cv2.imwrite(out_dir+"/"+imgs[num], img)
+
 
 
 

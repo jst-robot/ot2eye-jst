@@ -1,8 +1,24 @@
 # ot2eye
 
+## About ot2eye
+
+- Opentrons OT-2 の底面の画像からラボウェアの位置を検出する
+- 検出した位置をbounding boxとして元の画像に重ねた画像を出力する
+- チップラックがあった場合、チップの位置を検出する
 
 
-## install
+
+## Example
+
+input
+
+output
+
+画像
+
+
+
+## installation
 
 ```
 $ git clone --recursive git@github.com:bioinfo-tsukuba/ot2eye.git
@@ -85,6 +101,22 @@ ot2eye/
 - yaml
 
 - argparse
+
+
+
+
+
+### Usage Enviroment
+
+* 
+
+
+
+## ドキュメントに書くこと
+
+- 画像に対する想定
+  - 画像に対する想定現在のモデルやソフトウェアでは、入力として、Opentrons OT-2 の真上から撮影した画像を想定しています。
+  - この画像は斜めになっていないことが想定されています（the images is assumed not to be titled.）
 
 
 
