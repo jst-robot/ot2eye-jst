@@ -1,0 +1,4 @@
+well_plate_6
+well_plate_96
+tip_rack
+tip
