@@ -8,6 +8,28 @@
 
 
 
+## Tutorial
+
+### installation
+
+```
+$ git clone --recursive git@github.com:bioinfo-tsukuba/ot2eye.git
+$ cd ot2eye/yolov5/
+$ python3 -m pip install -r requirements.txt 
+```
+
+### 動作確認的な
+
+~~~~
+$ python3 ot2eye.py ~~~~
+~~~~
+
+
+
+
+
+
+
 ## Example
 
 input
@@ -18,13 +40,7 @@ output
 
 
 
-## installation
 
-```
-$ git clone --recursive git@github.com:bioinfo-tsukuba/ot2eye.git
-$ cd ot2eye/yolov5/
-$ python3 -m pip install -r requirements.txt 
-```
 
 
 
@@ -65,6 +81,8 @@ $ python3 ot2eye.py <>
 ~~~~
 $ python3 ot2eye.py dataset/20220718_large
 ~~~~
+
+
 
 
 
@@ -119,6 +137,8 @@ ot2eye/
   - この画像は斜めになっていないことが想定されています（the images is assumed not to be titled.）
 
 
+
+ユーザー名データ等が残らないようにする（yamlには残ってるから，履歴が公開されないように公開）
 
 
 

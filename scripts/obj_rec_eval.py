@@ -1,85 +1,167 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
+from os import sep
 import cv2
 import csv
+from glob import glob
 
 class Obj_Rec_Eval():
-	def __init__(self, DTC_LABEL_DIR_PATH, IMG_DIR_PATH, ANS_LABEL_DIR_PATH, IMG_EXT):
+	def __init__(self, out_file_path, DTC_LABEL_DIR_PATH, IMG_DIR_PATH, ANS_LABEL_DIR_PATH):
+		self.SEPARATOR=" " # labelファイルのセパレータ
 
-		# get number of detect labels files
-		dtc_label_name = os.listdir(path=DTC_LABEL_DIR_PATH)
-		FILE_NUM = len(dtc_label_name)
-		img_name = [""] * FILE_NUM
-		ans_label_name = [""] * FILE_NUM
+		# output csv array
+		result_arr = []
+		result_arr.append(["#Image_file", "#Labware", "#Recall", "#Precision", "#F-value"])
+		# label names
+		label_name_arr = []
+
+		# get label number and name
+		with open(ANS_LABEL_DIR_PATH+sep+"classes.txt", "r") as file:
+			label_name_arr = [s.strip() for s in file.readlines()]
 
 		# loop for all file in detect label directory
-		for file_num in range(FILE_NUM):
-			# classes.txt file is skip 
-			if(dtc_label_name[file_num] == "classes.txt"):
-				continue
+		for dtc_label_file_name in os.listdir(DTC_LABEL_DIR_PATH):
+			# file name
+			base_name     = dtc_label_file_name.rsplit(".",1)[0]
+			IMG_EXT       = glob(IMG_DIR_PATH+os.sep+base_name+"*")[0].rsplit(".",1)[1]
+			img_file_name = base_name + "." + IMG_EXT
 
-			# variable of evaluation
-			eval_N_pos = 0
-			eval_TP = 0
-			eval_FP = 0
-			eval_Precision = 0
-			eval_Recall = 0
-			eval_F = 0
+			# get image
+			img = cv2.imread(IMG_DIR_PATH + sep +  img_file_name)
 
-			# set file name
-			img_name[file_num] = dtc_label_name[file_num][:dtc_label_name[file_num].rfind(".")]+IMG_EXT
-			ans_label_name[file_num] = dtc_label_name[file_num]
+			# get detected and answer label data
+			dtc_label_arr = self.label_file_to_arr(DTC_LABEL_DIR_PATH+sep+dtc_label_file_name)
+			ans_label_arr = self.label_file_to_arr(ANS_LABEL_DIR_PATH+sep+dtc_label_file_name)
 
-			# get image size
-			img = cv2.imread(IMG_DIR_PATH + "/" +  img_name[file_num])
-			img_height, img_width = img.shape[:2]
-			# get detect label file
-			dtc_labels = self.file_to_arr(DTC_LABEL_DIR_PATH, dtc_label_name, file_num)
-			# get answer label file
-			ans_labels = self.file_to_arr(ANS_LABEL_DIR_PATH, ans_label_name, file_num)
+			# 各ラベルごとにループ
+			for obj_num in range(len(label_name_arr)):
+				# evaluation calculation
+				eval_N_pos, eval_TP,eval_FP = self.calc_TP_FP(ans_label_arr, dtc_label_arr, img, obj_num)
 
-			#
-			# evaluation
-			#
-			# calc N_pos & TP & FP
-			eval_N_pos = len(ans_labels)
-			eval_TP = self.calc_TP(ans_labels, dtc_labels, img)
-			eval_FP = self.calc_FP(ans_labels, dtc_labels, img)
-			# calc Precision & Recall
-			eval_Precision = eval_TP/float(eval_TP+eval_FP)
-			eval_Recall    = eval_TP/float(eval_N_pos)
-			eval_F         = 2.0 / (1.0/eval_Precision + 1.0/eval_Recall)
+				# calc precision
+				try:
+					eval_Precision = eval_TP / float(eval_TP + eval_FP)
+				except ZeroDivisionError:
+					eval_Precision = float("nan")
+				# calc recall
+				try:
+					eval_Recall = eval_TP / float(eval_N_pos)
+				except ZeroDivisionError:
+					eval_Recall = float("nan")
+				# calc F value
+				try:
+					eval_F = 2.0 / (1.0/eval_Precision + 1.0/eval_Recall)
+				except ZeroDivisionError:
+					eval_F = float("nan")
 
-			# show calc result
-			print("evaluation of {}".format(dtc_label_name[file_num]))
-			print("\tN_pos: {}".format(eval_N_pos))
-			print("\tTP:    {}".format(eval_TP))
-			print("\tFP:    {}".format(eval_FP))
-			print("\tPrecision: {}".format(eval_Precision))
-			print("\tRecall:    {}".format(eval_Recall))
-			print("\tF value:   {}".format(eval_F))
-			print("")
 
-			#
-			# show detect img
-			#
-			self.show_dtc_ans_img(img, ans_labels, dtc_labels)
-			cv2.imshow("{}".format(img_name[file_num]),img)
-			cv2.waitKey(0)
+				# print(dtc_label_file_name)
+				# print("evaluation of {}".format(dtc_label_file_name))
+				# print("\tlabel: {}".format(label_name_arr[obj_num]))
+				# print("\tN_pos: {}".format(eval_N_pos))
+				# print("\tTP:    {}".format(eval_TP))
+				# print("\tFP:    {}".format(eval_FP))
+				# print("\tPrecision: {}".format(eval_Precision))
+				# print("\tRecall:    {}".format(eval_Recall))
+				# print("\tF value:   {}".format(eval_F))
+				# print("")
 
-		cv2.destroyAllWindows()
+				result_arr.append([\
+						img_file_name,\
+						label_name_arr[obj_num],\
+						"{:.06f}".format(eval_Recall),\
+						"{:.06f}".format(eval_Precision),\
+						"{:.06f}".format(eval_F)])
+
+
+		# output evalutate file
+		with open(out_file_path+sep+"evaluation.csv", "w") as out_file:
+			writer = csv.writer(out_file, delimiter=" ")
+			writer.writerows(result_arr)
+
+		return
+
+
+		#	#
+		#	# show detect img
+		#	#
+		#	self.show_dtc_ans_img(img, ans_labels, dtc_labels)
+		#	cv2.imshow("{}".format(img_name[file_num]),img)
+		#	cv2.waitKey(0)
+
+		#cv2.destroyAllWindows()
+
 
 
 	# lebel file to array
-	def file_to_arr(self, dir_path, label_name, file_num):
-		dtc_labels = None
-		with open(dir_path + "/" + label_name[file_num], 'r') as txtfile:
-			reader = csv.reader(txtfile, delimiter=" ")
-			labels = [row for row in reader]
+	def label_file_to_arr(self, label_file_path):
+		try:
+			labels = None
 
-		return labels
+			with open(label_file_path, 'r') as txtfile:
+				reader = csv.reader(txtfile, delimiter=self.SEPARATOR)
+				labels = [row for row in reader]
+
+			return labels
+		except FileNotFoundError:
+			return []
 	
+
+	# calc TP and FP
+	def calc_TP_FP(self, ans_labels, dtc_labels, img, obj_num):
+		img_height, img_width = img.shape[:2]
+		num_all_dtc = 0
+		eval_N_pos  = 0
+		eval_TP = 0
+		eval_FP = 0
+
+		# calc N pos
+		for ans_row in ans_labels:
+			if int(ans_row[0]) == obj_num:
+				eval_N_pos += 1
+
+		# calc TP and FP
+		for dtc_row in dtc_labels: # loop for all row in detect label file
+			if int(dtc_row[0]) != obj_num:
+				continue
+			else:
+				num_all_dtc += 1
+
+			for ans_row in ans_labels: # loop for all row in answer label file
+				if int(ans_row[0]) != obj_num:
+					continue
+				# 推論bboxの中点が正解bboxに含まれているかどうか
+				if(self.point_is_in_bbox(ans_row, dtc_row, img_width, img_height)):
+					eval_TP += 1
+		
+		eval_FP = num_all_dtc - eval_TP
+
+		return (eval_N_pos, eval_TP, eval_FP)
+
+
+	# check point is in bbox
+	def point_is_in_bbox(self, p_row, b_row, img_width, img_height):
+		# get point object info
+		p_label, p_pos_w, p_pos_h, p_size_w, p_size_h\
+				= self.get_obj_info(p_row, img_width, img_height)
+		# get bbox object info
+		b_label, b_pos_w, b_pos_h, b_size_w, b_size_h\
+				= self.get_obj_info(b_row, img_width, img_height)
+
+		if p_label != b_label:
+			return False
+		else:
+			b_l = b_pos_w - b_size_w*0.5
+			b_r = b_pos_w + b_size_w*0.5
+			b_t = b_pos_h - b_size_h*0.5
+			b_b = b_pos_h + b_size_h*0.5
+
+			return\
+					(p_label == b_label and\
+					b_l < p_pos_w and p_pos_w < b_r and\
+					b_t < p_pos_h and p_pos_h < b_b)
+
 
 	# get object info from label array
 	def get_obj_info(self, row, img_width, img_height):
@@ -90,6 +172,40 @@ class Obj_Rec_Eval():
 		obj_size_h = img_height * float(row[4])
 
 		return obj_label, obj_cnt_w, obj_cnt_h, obj_size_w, obj_size_h
+
+
+	# # calc TP
+	# def calc_TP(self, ans_labels, dtc_labels, img, obj_name):
+	# 	eval_TP = 0
+	# 	img_height, img_width = img.shape[:2]
+
+	# 	for ans_row in ans_labels: # loop for all row in answer label file
+	# 		# 所望のラベルでなければスキップ
+	# 		# if ans_row[0] != obj_name:
+	# 		# 	continue
+	# 		for dtc_row in dtc_labels: # loop for all row in detect label file
+	# 			# 正解bboxの中点が推論bboxに含まれているかどうか
+	# 			if(self.point_is_in_bbox(ans_row, dtc_row, img_width, img_height)):
+	# 				eval_TP += 1
+		
+	# 	return eval_TP
+
+
+	# # calc FP
+	# def calc_FP(self, ans_labels, dtc_labels, img):
+	# 	img_height, img_width = img.shape[:2]
+	# 	num_all_dtc = len(dtc_labels)
+	# 	num_dtc = 0
+
+	# 	for dtc_row in dtc_labels: # loop for all row in detect label file
+	# 		for ans_row in ans_labels: # loop for all row in answer label file
+	# 			# 推論bboxの中点が正解bboxに含まれているかどうか
+	# 			if(self.point_is_in_bbox(ans_row, dtc_row, img_width, img_height)):
+	# 				num_dtc += 1
+	
+	# 	return num_all_dtc-num_dtc
+
+
 
 	
 	# show detect img
@@ -124,68 +240,18 @@ class Obj_Rec_Eval():
 			dtc_obj_b = dtc_obj_cnt_h + dtc_obj_size_h/2.0
 			cv2.rectangle(img, (round(dtc_obj_l), round(dtc_obj_t)), (round(dtc_obj_r), round(dtc_obj_b)), (0,255,0))
 
-	# check point is in bbox
-	def point_is_in_bbox(self, p_row, b_row, img_width, img_height):
-		# get point object info
-		p_label, p_cnt_w, p_cnt_h, p_size_w, p_size_h\
-				= self.get_obj_info(p_row, img_width, img_height)
-		# get bbox object info
-		b_label, b_cnt_w, b_cnt_h, b_size_w, b_size_h\
-				= self.get_obj_info(b_row, img_width, img_height)
-
-		b_l = b_cnt_w - b_size_w/2.0
-		b_r = b_cnt_w + b_size_w/2.0
-		b_t = b_cnt_h - b_size_h/2.0
-		b_b = b_cnt_h + b_size_h/2.0
-
-		return\
-				(p_label == b_label and\
-				b_l < p_cnt_w and p_cnt_w < b_r and\
-				b_t < p_cnt_h and p_cnt_h < b_b)
 
 
-	# calc TP
-	def calc_TP(self, ans_labels, dtc_labels, img):
-		eval_TP = 0
-		img_height, img_width = img.shape[:2]
-
-		for ans_row in ans_labels: # loop for all row in answer label text file
-			for dtc_row in dtc_labels: # loop for all row in detect label text file
-				# 正解bboxの中点が推論bboxに含まれているかどうか
-				if(self.point_is_in_bbox(ans_row, dtc_row, img_width, img_height)):
-					eval_TP += 1
-		
-		return eval_TP
-
-
-	# calc FP
-	def calc_FP(self, ans_labels, dtc_labels, img):
-		# eval_FP = 0
-		img_height, img_width = img.shape[:2]
-		num_all_dtc = len(dtc_labels)
-		num_dtc = 0
-
-		for dtc_row in dtc_labels: # loop for all row in detect label text file
-			for ans_row in ans_labels: # loop for all row in answer label text file
-				# 推論bboxの中点が正解bboxに含まれているかどうか
-				# if(self.point_is_in_bbox(dtc_row, ans_row, img_width, img_height)):
-				if(self.point_is_in_bbox(ans_row, dtc_row, img_width, img_height)):
-					# eval_FP += 1
-					num_dtc += 1
-		
-		return num_all_dtc-num_dtc
 
 
 
 
 def main():
 	obj_rec_eval = Obj_Rec_Eval(\
-			"./detect/hoge/labels",\
+			"./out",\
+			"./out/labels_merged",\
 			"./dataset/20220718_trim/images",\
-			"./dataset/20220718_trim/labels",\
-			# "./detect/exp_20220624_small_notip_train/labels",\
-			# "./dataset/20220624_small_notip/train/images",\
-			# "./dataset/20220624_small_notip/train/labels",\
+			"./dataset/20220718_large_answer",\
 			".jpeg")
 
 if __name__ == '__main__':
