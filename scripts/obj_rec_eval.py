@@ -56,17 +56,6 @@ class Obj_Rec_Eval():
 					eval_F = float("nan")
 
 
-				# print(dtc_label_file_name)
-				# print("evaluation of {}".format(dtc_label_file_name))
-				# print("\tlabel: {}".format(label_name_arr[obj_num]))
-				# print("\tN_pos: {}".format(eval_N_pos))
-				# print("\tTP:    {}".format(eval_TP))
-				# print("\tFP:    {}".format(eval_FP))
-				# print("\tPrecision: {}".format(eval_Precision))
-				# print("\tRecall:    {}".format(eval_Recall))
-				# print("\tF value:   {}".format(eval_F))
-				# print("")
-
 				result_arr.append([\
 						img_file_name,\
 						label_name_arr[obj_num],\
@@ -83,14 +72,6 @@ class Obj_Rec_Eval():
 		return
 
 
-		#	#
-		#	# show detect img
-		#	#
-		#	self.show_dtc_ans_img(img, ans_labels, dtc_labels)
-		#	cv2.imshow("{}".format(img_name[file_num]),img)
-		#	cv2.waitKey(0)
-
-		#cv2.destroyAllWindows()
 
 
 
@@ -173,72 +154,6 @@ class Obj_Rec_Eval():
 
 		return obj_label, obj_cnt_w, obj_cnt_h, obj_size_w, obj_size_h
 
-
-	# # calc TP
-	# def calc_TP(self, ans_labels, dtc_labels, img, obj_name):
-	# 	eval_TP = 0
-	# 	img_height, img_width = img.shape[:2]
-
-	# 	for ans_row in ans_labels: # loop for all row in answer label file
-	# 		# 所望のラベルでなければスキップ
-	# 		# if ans_row[0] != obj_name:
-	# 		# 	continue
-	# 		for dtc_row in dtc_labels: # loop for all row in detect label file
-	# 			# 正解bboxの中点が推論bboxに含まれているかどうか
-	# 			if(self.point_is_in_bbox(ans_row, dtc_row, img_width, img_height)):
-	# 				eval_TP += 1
-		
-	# 	return eval_TP
-
-
-	# # calc FP
-	# def calc_FP(self, ans_labels, dtc_labels, img):
-	# 	img_height, img_width = img.shape[:2]
-	# 	num_all_dtc = len(dtc_labels)
-	# 	num_dtc = 0
-
-	# 	for dtc_row in dtc_labels: # loop for all row in detect label file
-	# 		for ans_row in ans_labels: # loop for all row in answer label file
-	# 			# 推論bboxの中点が正解bboxに含まれているかどうか
-	# 			if(self.point_is_in_bbox(ans_row, dtc_row, img_width, img_height)):
-	# 				num_dtc += 1
-	
-	# 	return num_all_dtc-num_dtc
-
-
-
-	
-	# show detect img
-	def show_dtc_ans_img(self, img, ans_labels, dtc_labels):
-		img_height, img_width = img.shape[:2]
-
-		# show ans
-		for ans_row in ans_labels: # loop for all row in answer label text file
-			# get answer object info
-			ans_obj_label, ans_obj_cnt_w, ans_obj_cnt_h, ans_obj_size_w, ans_obj_size_h\
-					= self.get_obj_info(ans_row, img_width, img_height)
-			# add ans marker to img
-			cv2.drawMarker(img, (round(ans_obj_cnt_w),round(ans_obj_cnt_h)), (0,0,255), markerSize=10)
-			# add ans rectangle to img
-			# ans_obj_l = ans_obj_cnt_w - ans_obj_size_w/2.0
-			# ans_obj_r = ans_obj_cnt_w + ans_obj_size_w/2.0
-			# ans_obj_t = ans_obj_cnt_h - ans_obj_size_h/2.0
-			# ans_obj_b = ans_obj_cnt_h + ans_obj_size_h/2.0
-			# cv2.rectangle(img, (round(ans_obj_l), round(ans_obj_t)), (round(ans_obj_r), round(ans_obj_b)), (0,0,255))
-
-		# show dtc
-		for dtc_row in dtc_labels: # loop for all row in detect label text file
-			# get answer object info
-			dtc_obj_label, dtc_obj_cnt_w, dtc_obj_cnt_h, dtc_obj_size_w, dtc_obj_size_h\
-					= self.get_obj_info(dtc_row, img_width, img_height)
-			# add dtc marker to img
-			# cv2.drawMarker(img, (round(dtc_obj_cnt_w),round(dtc_obj_cnt_h)), (0,255,0), markerSize=10)
-			# add detected rectangle to img
-			dtc_obj_l = dtc_obj_cnt_w - dtc_obj_size_w/2.0
-			dtc_obj_r = dtc_obj_cnt_w + dtc_obj_size_w/2.0
-			dtc_obj_t = dtc_obj_cnt_h - dtc_obj_size_h/2.0
-			dtc_obj_b = dtc_obj_cnt_h + dtc_obj_size_h/2.0
-			cv2.rectangle(img, (round(dtc_obj_l), round(dtc_obj_t)), (round(dtc_obj_r), round(dtc_obj_b)), (0,255,0))
 
 
 

@@ -14,7 +14,7 @@ from scripts.plot import Plot
 
 
 class OT2Eye():
-	def __init__(self, img_dir, out_dir, model_labware, model_tip, threshold, train_yaml):
+	def __init__(self, img_dir, out_dir, model_labware, model_tip, threshold, train_yaml, answer_label_file):
 		#
 		# argument
 		#
@@ -24,6 +24,7 @@ class OT2Eye():
 		# model_tip:  チップの検出モデル
 		# threshold:  検出閾値
 		# train_yaml: 訓練データに用いたyamlファイル
+		# answer_label_file: 解答ラベルファイル
 		#
 		# file name
 		#
@@ -38,6 +39,7 @@ class OT2Eye():
 		DIR_OUT_TIP_LBL     = "labels_tip"
 		DIR_OUT_MERGED_IMG  = "images_merged"
 		DIR_OUT_MERGED_LBL  = "labels_merged"
+		DIR_OUT_EVAL_IMG    = "images_evaluation"
 		#
 		# constants
 		#
@@ -178,6 +180,15 @@ class OT2Eye():
 		shutil.copytree(out_dir+sep+DIR_TMP_DETECT_TIP+sep+"labels", out_dir+sep+DIR_OUT_TIP_LBL)
 
 
+		if answer_label_file != None:
+			print("##############")
+			print("# evaluation #")
+			print("##############")
+			#正解ラベル画像出力
+			os.mkdir(out_dir+sep+DIR_OUT_EVAL_IMG)
+			# def make_bbox_image(self, ori_img_dir, label_dir, save_dir, yaml_arr, ans=False):
+			self.make_bbox_image(out_dir+sep+DIR_OUT_MERGED_IMG, answer_label_file, out_dir+sep+DIR_OUT_EVAL_IMG, yaml_arr, True)
+
 
 
 
@@ -260,7 +271,7 @@ class OT2Eye():
 	#
 	# 検出データからbbox付き画像生成
 	#
-	def make_bbox_image(self, ori_img_dir, label_dir, save_dir, yaml_arr):
+	def make_bbox_image(self, ori_img_dir, label_dir, save_dir, yaml_arr, eval_mode=False):
 		object_name = None # 検出オブジェクト名配列
 
 		# 訓練yaml取得(ラベルデータ取得)
@@ -281,7 +292,7 @@ class OT2Eye():
 				img = cv2.imread(ori_img_dir+sep+img_name)
 				# ラベルループ
 				for label_row in self.label_file_to_arr(label_dir+sep+base_name+".txt"):
-					self.plot_util.label_row_to_bbox(img, label_row, object_name)
+					self.plot_util.label_row_to_bbox(img, label_row, object_name, eval_mode)
 				# 保存
 				cv2.imwrite(save_dir+sep+img_name, img)
 
@@ -425,28 +436,24 @@ if __name__ == '__main__':
 			default="."+sep+"model"+sep+"dataset_20220624_small_notip.yaml",
 			help="yaml file path of training labware.")
 	# evaluation mode
-	prs.add_argument("--evaluate", action="store_true", required=False,
-			help="flag of evaluation mode.")
+	prs.add_argument("--evaluate", type=str, required=False, default=None,
+			help="answer labels file.")
 	args = prs.parse_args()
-
 
 	#
 	# detection
 	#
-	ot2eye = OT2Eye(args.image_dir, args.out_dir, args.model_labware, args.model_tip, args.threshold, args.labware_train_yaml)
+	ot2eye = OT2Eye(args.image_dir, args.out_dir, args.model_labware, args.model_tip, args.threshold, args.labware_train_yaml, args.evaluate)
 
 	#
 	# evaluation mode
 	#
-	if args.evaluate:
-		print("##############")
-		print("# evaluation #")
-		print("##############")
+	if args.evaluate != None:
 		obj_rec_eval = Obj_Rec_Eval(\
 				ot2eye.out_dir,\
 				ot2eye.out_dir+sep+"labels_merged",\
 				ot2eye.out_dir+sep+"images_merged",\
-				"dataset"+sep+"20220718_large_answer")
+				args.evaluate)
 
 	# example
 	# python3 ot2eye.py dataset/20220718_large/
