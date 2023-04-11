@@ -437,7 +437,7 @@ if __name__ == '__main__':
 			help="yaml file path of training labware.")
 	# evaluation mode
 	prs.add_argument("--evaluate", type=str, required=False, default=None,
-			help="answer labels file.")
+			help="directory path of answer labels file.")
 	args = prs.parse_args()
 
 	#
