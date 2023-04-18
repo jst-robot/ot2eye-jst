@@ -166,8 +166,7 @@ def main():
 			"./out",\
 			"./out/labels_merged",\
 			"./dataset/20220718_trim/images",\
-			"./dataset/20220718_large_answer",\
-			".jpeg")
+			"./dataset/20220718_large_answer")
 
 if __name__ == '__main__':
 	try:
