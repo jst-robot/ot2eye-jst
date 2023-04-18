@@ -10,7 +10,7 @@
 
 ## Tutorial
 
-### installation
+### Installation
 
 ```
 $ git clone --recursive git@github.com:bioinfo-tsukuba/ot2eye.git
@@ -18,41 +18,48 @@ $ cd ot2eye/yolov5/
 $ python3 -m pip install -r requirements.txt 
 ```
 
-### 動作確認的な
+### Confirmation of Operation
 
 ~~~~
-$ python3 ot2eye.py ~~~~
+$ cd ot2eye/
+$ python3 ot2eye.py dataset/20220718_large/
 ~~~~
 
+It will take some time to complete. The installation is successful if the "out" directory is created without any errors. The "out" directory contains label files and images including bounding boxes for the detected labware.
 
 
 
+## Usage of Labware Detection
 
-
-
-## Example
-
-input
-
-output
-
-画像
-
-
-
-
-
-
-
-## Usage
-
-### Detect mode
-
-execution command
+### Execution Command
 
 ~~~~
 $ python3 ot2eye.py <image_dir>
 ~~~~
+
+Arguments
+
+* image_dir: Directory path of the images for which you want to detect labware. Multiple images can be detected at once.
+
+Options
+
+| Option               | Explanation                                                  | Default                                       |
+| -------------------- | ------------------------------------------------------------ | --------------------------------------------- |
+| --out-dir            | Directory path of the output files.                          | out                                           |
+| --model-labware      | YOLO model for detecting labware other than tips.            | model/detect_labware_20220624/weights/best.pt |
+| --model-tip          | YOLO model for detecting tips.                               | model/detect_tip_20220624/weights/best.pt     |
+| --threshold          | Threshold for class determination. Same as option "conf" in YOLO v5's detect.py. | 0.7                                           |
+| --labware-train-yaml | Path of the yaml file used for training of labware other than tip detection in YOLO. | model/dataset_20220624_small_notip.yaml       |
+
+
+
+### Required files
+
+* 
+
+
+
+### output files
 
 output
 
@@ -60,23 +67,9 @@ ot2eye/out/
 
 out1, out2, ...
 
-option
-
-- --out-dir
-  - directory path of output files.
-  - defailt: "out"
-- --model-labware
-- --model-tip
-- --threshold
-- --labware-train-yaml
-
-~~~~
-$ python3 ot2eye.py <>
-~~~~
 
 
-
-### example
+### Example
 
 ~~~~
 $ python3 ot2eye.py dataset/20220718_large
@@ -84,24 +77,80 @@ $ python3 ot2eye.py dataset/20220718_large
 
 
 
+### Requirement
 
+
+
+## How to detect labware
+
+
+
+## Creating a detection model
 
 
 
 ## File structure
 
-ot2eye/
-    |---- model/
-        |---- detect_labware_20220624/
-        |---- detect_tip_20220624/
-        |---- dataset_20220624_small_notip.yaml
-    |---- scripts/
-        |---- trim_tip_rack.py
-        |---- obj_rec_eval.py
-    |---- yolov5/
-    |---- LICENSE
-    |---- README.md
-    |---- ot2eye.py
+ot2eye/  
+    |---- model/  
+        |---- detect_labware_20220624/  
+        |---- detect_tip_20220624/  
+        |---- dataset_20220624_small_notip.yaml  
+    |---- scripts/  
+        |---- trim_tip_rack.py  
+        |---- obj_rec_eval.py  
+    |---- yolov5/  
+    |---- LICENSE  
+    |---- README.md  
+    |---- ot2eye.py  
+
+
+
+## Evaluation mode
+
+The accuracy of labware detection can be evaluated numerically.
+
+### Required files
+
+* To evaluate the accuracy of the detection, Answer label files are required.
+  Answer label files. This must be in the same directory and in the same format as the YOLO training data. Refer to "1.2 Create Labels" on this page  (https://docs.ultralytics.com/yolov5/train_custom_data/#11-collect-images.) for details on the format of the YOLO training data.
+* Put "classes.txt" in the same directory as the answer label files. This is usually generated automatically when the label files are created.
+
+### Commands
+
+If used evaluation mode, it is specified by a command option.
+
+```
+$ python3 ot2eye.py <img_dir> --evaluate <answer_labels> 
+```
+
+* img_dir: **説明追加**
+* answer labels: directory path of the answer labels and classes.txt
+
+### Output files
+
+* evaluation.csv
+  * example
+  
+    | #Image_file | #Labware | #Recall | #Precision | #Precision |
+    | ----------- | -------- | ------- | ---------- | ---------- |
+    |             |          |         |            |            |
+    |             |          |         |            |            |
+    |             |          |         |            |            |
+    |             |          |         |            |            |
+  
+    
+  * #Image_file #Labware #Recall #Precision #Precision
+  * **例（表）**
+* images_evaluation/ (image_files)
+  * An answer bbox surrounded by a dashed rectangle is added to the detection result image. The label names of the answer bboxes other than the tip are displayed in the lower right corner. 
+  * The extension is the same as that of the input image.
+  * **例の画像**
+
+### Specifications
+
+* 評価値の計算方法．bboxの被った判定のしかた．nanがでるとき．csvの形式の説明
+* 
 
 
 
@@ -114,11 +163,17 @@ ot2eye/
   $ python3 -m pip install opencv-contrib-python
   ```
 
+- argparse
+
+- subprocess
+
 - csv
 
 - yaml
 
-- argparse
+- shutil
+
+- glob
 
 
 
@@ -141,86 +196,3 @@ ot2eye/
 ユーザー名データ等が残らないようにする（yamlには残ってるから，履歴が公開されないように公開）
 
 
-
-## 開発メモ
-
-### 出力形式
-
-- out/
-  - images_labware/
-    - hoge.jpeg
-      ※非リサイズ画像にラボウェアとチップのbbox
-      ※bboxはラベルと確率あり（ただしチップはラベル無し）
-    - fuga.jpeg
-  - labels_labware/
-    - hoge.txt
-      ※ラボウェアとチップを統合したラベル
-    - fuga.txt
-  - images_tip/
-    - hoge_0.jpeg
-    - hoge_1.jpeg
-    - fuga_0.jpeg
-  - labels_tip/
-    - hoge_0.txt
-    - hoge_1.txt
-    - fuga_0.txt
-  - 評価.csv
-
-
-
-
-
-## 変更点
-
-yolov5/utils/plots.py
-
-参考：https://qiita.com/fujioka244kogacity/items/e5acf8d9bb728e7d1bcc
-
-* 99行目をコメントアウトし，100行目追加
-
-  ```
-  cv2.rectangle(self.im, p1, p2, color, thickness=self.lw, lineType=cv2.LINE_AA)
-  ```
-
-  ↓
-
-  ```
-  cv2.rectangle(self.im, p1, p2, color, thickness=1, lineType=cv2.LINE_AA)
-  ```
-
-* 106行目コメントアウト
-
-  ```
-  cv2.rectangle(self.im, p1, p2, color, -1, cv2.LINE_AA)  # filled
-  ```
-
-  ↓
-
-  ```
-  # cv2.rectangle(self.im, p1, p2, color, -1, cv2.LINE_AA)  # filled
-  ```
-
-* 107〜113行目をコメントアウトし，114〜119行目追加
-
-  ```
-  cv2.putText(self.im,
-              label, (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
-              0,
-              self.lw / 3,
-              txt_color,
-              thickness=tf,
-              lineType=cv2.LINE_AA)
-  ```
-
-  ↓
-
-  ```
-  cv2.putText(self.im,
-              label, (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
-              cv2.FONT_HERSHEY_SIMPLEX,
-              self.lw / 6,
-              txt_color,
-              thickness=1)
-  ```
-
-  
