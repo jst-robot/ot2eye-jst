@@ -1,5 +1,5 @@
-train: ~/bioinfo/obj_rec/dataset/20220624_small_notip/train/images/
-val: ~/bioinfo/obj_rec/dataset/20220624_small_notip/val/images/
+train: ~/ot2eye/dataset/20220624_notip/train/images/
+val: ~/ot2eye/dataset/20220624_notip/val/images/
 
 nc: 3
 
