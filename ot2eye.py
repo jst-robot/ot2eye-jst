@@ -128,15 +128,19 @@ class OT2Eye():
 		print("##############")
 		print("# detect tip #")
 		print("##############")
-		subprocess.run(["python3", "yolov5"+sep+"detect.py",\
-				"--source", out_dir+sep+DIR_TMP_IMG_TRIM, # 検出対象画像ディレクトリ
-				"--project", out_dir, # 検出結果出力先ディレクトリ
-				"--name", DIR_TMP_DETECT_TIP, # 検出結果ディレクトリ名
-				"--weights", model_tip, # 検出モデル
-				"--conf", str(threshold), # 検出閾値
-				"--save-txt", # 推論結果ラベル出力
-				"--save-conf", # 推論結果確率出力
-				"--exist-ok"])# 検出結果上書き
+		if len(os.listdir(out_dir+sep+DIR_TMP_IMG_TRIM)) > 0:
+			subprocess.run(["python3", "yolov5"+sep+"detect.py",\
+					"--source", out_dir+sep+DIR_TMP_IMG_TRIM, # 検出対象画像ディレクトリ
+					"--project", out_dir, # 検出結果出力先ディレクトリ
+					"--name", DIR_TMP_DETECT_TIP, # 検出結果ディレクトリ名
+					"--weights", model_tip, # 検出モデル
+					"--conf", str(threshold), # 検出閾値
+					"--save-txt", # 推論結果ラベル出力
+					"--save-conf", # 推論結果確率出力
+					"--exist-ok"])# 検出結果上書き
+		else:
+			print("    no tip rack")
+
 
 
 		#
@@ -152,7 +156,6 @@ class OT2Eye():
 		print("################")
 		# サブ出力ディレクトリ生成
 		os.mkdir(out_dir+sep+DIR_OUT_LABWARE_IMG)
-		os.mkdir(out_dir+sep+DIR_OUT_TIP_IMG)
 		os.mkdir(out_dir+sep+DIR_OUT_MERGED_IMG)
 
 		# 統合ラベル生成
@@ -164,6 +167,12 @@ class OT2Eye():
 				TIP_RACK_LABEL_NAME, # チップラックのラベル名
 				WIDTH_SMALL, HEIGHT_SMALL) # 縮小後画像サイズ
 
+		#結果ラベルコピー
+		shutil.copytree(out_dir+sep+DIR_TMP_DETECT_LABWARE+sep+"labels", out_dir+sep+DIR_OUT_LABWARE_LBL)
+		if len(os.listdir(out_dir+sep+DIR_TMP_IMG_TRIM)) > 0:
+			os.mkdir(out_dir+sep+DIR_OUT_TIP_IMG)
+			shutil.copytree(out_dir+sep+DIR_TMP_DETECT_TIP+sep+"labels", out_dir+sep+DIR_OUT_TIP_LBL)
+
 
 		#ラボウェア＆チップ検出結果画像静止絵
 		self.make_bbox_image(img_dir, out_dir+sep+DIR_OUT_MERGED_LBL,
@@ -174,10 +183,6 @@ class OT2Eye():
 		#チップ検出結果画像生成
 		self.make_bbox_image(out_dir+sep+DIR_TMP_IMG_TRIM, out_dir+sep+DIR_TMP_DETECT_TIP+sep+"labels"+sep,
 				out_dir+sep+DIR_OUT_TIP_IMG, "tip")
-
-		#結果ラベルコピー
-		shutil.copytree(out_dir+sep+DIR_TMP_DETECT_LABWARE+sep+"labels", out_dir+sep+DIR_OUT_LABWARE_LBL)
-		shutil.copytree(out_dir+sep+DIR_TMP_DETECT_TIP+sep+"labels", out_dir+sep+DIR_OUT_TIP_LBL)
 
 
 		if answer_label_file != None:
@@ -430,9 +435,9 @@ if __name__ == '__main__':
 	# threshold of detection
 	prs.add_argument("--threshold", type=float, required=False,
 			default=0.7,
-			help="confidence threshold of detection.")
+			help="confidence threshold of detection. (default: 0.7)")
 	# yaml file of training labware
-	prs.add_argument("--labware_train_yaml", type=str, required=False,
+	prs.add_argument("--labware-train-yaml", type=str, required=False,
 			default="."+sep+"model"+sep+"dataset_20220624_small_notip.yaml",
 			help="yaml file path of training labware.")
 	# evaluation mode

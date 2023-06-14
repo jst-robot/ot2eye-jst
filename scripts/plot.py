@@ -24,22 +24,22 @@ class Plot():
 		obj_t = round(obj_pos_h - obj_size_h*0.5)
 		obj_b = round(obj_pos_h + obj_size_h*0.5)
 
-		# 色設定
-		bbox_col,txt_col = self.gen_2_color(int(label_row[0]))
-		# bbox設定
-		lw = max(round(sum(img.shape) / 2 * 0.003), 2) # line width (yolov5と同じ)
-
 		# 描画
 		if int(label_row[0]) >= len(object_name) or object_name == ["tip"]: #tip
 			# bbox描画
 			if ans == True:
-				self.dotRectangle(img, (obj_l, obj_t), (obj_r, obj_b), bbox_col, 1, 4)
+				self.dotRectangle(img, (obj_l, obj_t), (obj_r, obj_b), (0,255,0), 1, 4)
 			else:
-				cv2.rectangle(img, (obj_l, obj_t), (obj_r, obj_b), bbox_col, 1)
+				cv2.rectangle(img, (obj_l, obj_t), (obj_r, obj_b), (0,255,0), 1)
 			# 中心点描画
-			cv2.drawMarker(img, (round(obj_pos_w), round(obj_pos_h)), bbox_col,
+			cv2.drawMarker(img, (round(obj_pos_w), round(obj_pos_h)), (0,255,0),
 					cv2.MARKER_CROSS, round(min(obj_size_w, obj_size_h)*0.5))
 		else: #tip以外
+			# 色設定
+			bbox_col,txt_col = self.gen_2_color(int(label_row[0]))
+			# bbox設定
+			lw = max(round(sum(img.shape) / 2 * 0.003), 2) # line width (yolov5と同じ)
+
 			obj_name = object_name[int(label_row[0])]
 			# テキスト設定
 			if ans == True:
