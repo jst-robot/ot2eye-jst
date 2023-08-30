@@ -12,7 +12,8 @@ class Obj_Rec_Eval():
 
 		# output csv array
 		result_arr = []
-		result_arr.append(["#Image_file", "#Labware", "#Recall", "#Precision", "#F-value"])
+		# result_arr.append(["#Image_file", "#Labware", "#Recall", "#Precision", "#F-value"])
+		result_arr.append(["Image_file", "Labware", "N_pos", "TP", "FP", "Recall", "Precision", "F-value"])
 		# label names
 		label_name_arr = []
 
@@ -21,7 +22,7 @@ class Obj_Rec_Eval():
 			label_name_arr = [s.strip() for s in file.readlines()]
 
 		# loop for all file in detect label directory
-		for dtc_label_file_name in os.listdir(DTC_LABEL_DIR_PATH):
+		for dtc_label_file_name in sorted(os.listdir(DTC_LABEL_DIR_PATH)):
 			# file name
 			base_name     = dtc_label_file_name.rsplit(".",1)[0]
 			IMG_EXT       = glob(IMG_DIR_PATH+os.sep+base_name+"*")[0].rsplit(".",1)[1]
@@ -59,14 +60,17 @@ class Obj_Rec_Eval():
 				result_arr.append([\
 						img_file_name,\
 						label_name_arr[obj_num],\
-						"{:.06f}".format(eval_Recall),\
-						"{:.06f}".format(eval_Precision),\
-						"{:.06f}".format(eval_F)])
+						"{:d}".format(eval_N_pos),\
+						"{:d}".format(eval_TP),\
+						"{:d}".format(eval_FP),\
+						"{:.04f}".format(eval_Recall),\
+						"{:.04f}".format(eval_Precision),\
+						"{:.04f}".format(eval_F)])
 
 
 		# output evalutate file
 		with open(out_file_path+sep+"evaluation.csv", "w") as out_file:
-			writer = csv.writer(out_file, delimiter=" ")
+			writer = csv.writer(out_file, delimiter="\t")
 			writer.writerows(result_arr)
 
 		return

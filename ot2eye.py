@@ -185,6 +185,18 @@ class OT2Eye():
 				out_dir+sep+DIR_OUT_TIP_IMG, "tip")
 
 
+
+		#
+		# 総合検出結果出力
+		#
+		print("#######################")
+		print("# Position_Inference  #")
+		print("#######################")
+		self.position_inference(img_dir, out_dir+sep+DIR_OUT_LABWARE_LBL, yaml_arr, out_dir)
+		
+
+
+
 		if answer_label_file != None:
 			print("##############")
 			print("# evaluation #")
@@ -409,6 +421,50 @@ class OT2Eye():
 			h_aft = round(h_bef * (w_aft / w_bef))
 			img = cv2.resize(img, dsize=(w_aft, h_aft))
 			cv2.imwrite(out_dir+sep+img_name, img)
+
+	
+	#
+	# 位置推論
+	#
+	def position_inference(self, img_dir_path, label_dir_path, yaml_arr, out_file_path):
+		object_name = yaml_arr["names"].copy()
+	
+		result_arr = []
+		result_arr.append(["Image_file", "Deck", "Labware"\
+			, "Confidence", "x_pos", "y_pos", "width", "height"])
+
+		# loop for label files
+		for img_file_name in  sorted(os.listdir(img_dir_path)):
+			base_name        = img_file_name.rsplit(".",1)[0]
+			label_file_name  = base_name+".txt"
+
+			# get label arr
+			labels = self.label_file_to_arr(label_dir_path+sep+label_file_name)
+
+			# sort for position inference
+			labels.sort(key=lambda x:x[2], reverse=True)
+			labels[0:3]  = sorted(labels[0:3],  key=lambda x:x[1])
+			labels[3:6]  = sorted(labels[3:6],  key=lambda x:x[1])
+			labels[6:9]  = sorted(labels[6:9],  key=lambda x:x[1])
+			labels[9:11] = sorted(labels[9:11], key=lambda x:x[1])
+
+			# for i in range(len(labels)):
+			# 	print("{:>15} {} {:.04f} {:.04f}".format(object_name[int(labels[i][0])]
+			# 		, labels[i][0], float(labels[i][1]), float(labels[i][2])))
+			# print("")
+
+			for i in range(len(labels)):
+				result_arr.append([img_file_name, i+1, object_name[int(labels[i][0])],\
+						"{:.04f}".format(float(labels[i][5])),\
+						"{:.04f}".format(float(labels[i][1])),\
+						"{:.04f}".format(float(labels[i][2])),\
+						"{:.04f}".format(float(labels[i][3])),\
+						"{:.04f}".format(float(labels[i][4]))])
+
+		# output evalutate file
+		with open(out_file_path+sep+"position_inference.csv", "w") as out_file:
+			writer = csv.writer(out_file, delimiter="\t")
+			writer.writerows(result_arr)
 
 
 
