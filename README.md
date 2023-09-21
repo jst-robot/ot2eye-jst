@@ -53,10 +53,10 @@ $ python3 ot2eye.py <image_dir>
 | Option               | Explanation                                                  | Default                                       |
 | -------------------- | ------------------------------------------------------------ | --------------------------------------------- |
 | --out-dir            | Directory path of the output files. If a directory with the same name already exists, a sequential number is assigned behind it. | out                                           |
-| --model-labware      | Path of the YOLO model for detecting labwares other than tips. | model/detect_labware_20220624/weights/best.pt |
+| --model-labware      | Path of the YOLO model for detecting labwares other than tips. | model/exp_20230622+20230525/weights/best.pt |
 | --model-tip          | Path of the YOLO model for detecting tips.                   | model/detect_tip_20220624/weights/best.pt     |
 | --threshold          | Threshold for class determination. Same as option "conf" in YOLO v5's detect.py. | 0.7                                           |
-| --labware-train-yaml | Path of the yaml file used for training of labware other than tip detection in YOLO. | model/dataset_20220624_small_notip.yaml       |
+| --labware-train-yaml | Path of the yaml file used for training of labware other than tip detection in YOLO. | model/dataset_20230622+20230525.yaml       |
 | --evaluate           | Also executes evaluation mode. Specify the directory path of the ground truth labels. | None                                          |
 
 ### Required files
