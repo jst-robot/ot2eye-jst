@@ -12,7 +12,7 @@ ot2eye is a system that detects labwares such as well plates, tip racks and tips
 
 ```
 $ git clone --recursive git@github.com:jst-robot/ot2eye-jst.git
-$ cd ot2eye/yolov5/
+$ cd ot2eye-jst/yolov5/
 $ python3 -m pip install -r requirements.txt 
 ```
 
@@ -23,7 +23,7 @@ $ python3 -m pip install -r requirements.txt
 Download the dataset for demonstration. Downloading may take some time.
 
 ~~~~
-$ cd ot2eye/
+$ cd ot2eye-jst/
 $ wget https://zenodo.org/record/7839440/files/example_dataset.zip?download=1
 $ unzip example_dataset.zip?download=1
 ~~~~

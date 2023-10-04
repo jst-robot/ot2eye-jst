@@ -2,3 +2,5 @@
 *.swo
 *.swn
 __pycache__/
+yolov5env
+.python-version
