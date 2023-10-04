@@ -11,7 +11,7 @@ ot2eye is a system that detects labwares such as well plates, tip racks and tips
 ## Installation
 
 ```
-$ git clone --recursive git@github.com:bioinfo-tsukuba/ot2eye.git
+$ git clone --recursive git@github.com:jst-robot/ot2eye-jst.git
 $ cd ot2eye/yolov5/
 $ python3 -m pip install -r requirements.txt 
 ```
