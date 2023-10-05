@@ -2,5 +2,13 @@
 *.swo
 *.swn
 __pycache__/
+
+# mac
+.DS_Store
+
 yolov5env
 .python-version
+
+dataset
+example_dataset.zip
+out*
