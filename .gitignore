@@ -12,3 +12,4 @@ yolov5env
 dataset
 example_dataset.zip
 out*
+record*

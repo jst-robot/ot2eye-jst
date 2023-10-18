@@ -11,7 +11,8 @@ from ot2eye import OT2Eye
 
 
 class OT2Eye_WebCam():
-	def __init__(self, cam_number, args):
+	def __init__(self, args):
+		cam_number = args.camera_number
 		img_dir_ori = "record" # 画像保存ディレクトリ
 		interval = 10 # 撮影間隔
 
@@ -26,6 +27,7 @@ class OT2Eye_WebCam():
 				ret, frame = self.cap.read()  # 画像を取得
 
 				if not ret:  # 画像取得が失敗した場合
+					print('fail to get image')
 					break
 
 				# 保存
@@ -52,9 +54,9 @@ class OT2Eye_WebCam():
 								ot2eye.out_dir+sep+"images_merged",\
 								args.evaluate)
 
-				# cv2.imshow("web_cam", cv2.resize(frame, (640,480)))
-				# if cv2.waitKey(1) & 0xFF == ord('q'):  # 'q' キーが押されたらループを終了
-				# 	break
+				cv2.imshow("web_cam", cv2.resize(frame, (640,480)))
+				if cv2.waitKey(1) & 0xFF == ord('q'):  # 'q' キーが押されたらループを終了
+					break
 
 		except KeyboardInterrupt:
 			print("Finish monitoring")
@@ -82,9 +84,9 @@ class OT2Eye_WebCam():
 		return out_dir
 
 	def cam_setting(self, num, width, height, fps, auto_focus):
-		self.auto_focus(auto_focus, f'/dev/video{num}')
+		# self.auto_focus(auto_focus, f'/dev/video{num}')
 
-		self.cap = cv2.VideoCapture(num, cv2.CAP_V4L2)  # 0はデフォルトカメラのインデックス
+		self.cap = cv2.VideoCapture(num)  # 0はデフォルトカメラのインデックス
 		self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)   # 幅設定
 		self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height) # 高さ設定
 		self.cap.set(cv2.CAP_PROP_FPS, fps)  # FPS設定
@@ -102,6 +104,9 @@ if __name__ == '__main__':
 	# image dir to detect
 	# prs.add_argument("image_dir", type=str,
 	# 		help="directory path of image files.")
+	# camera number
+	prs.add_argument("--camera-number", type=int, required=False, default=0,
+			help="number of web cam")
 	# output dir path
 	prs.add_argument("--out-dir", type=str, required=False, default="out",
 			help="directory path of output files.")
@@ -129,7 +134,7 @@ if __name__ == '__main__':
 	#
 	# detection
 	#
-	ot2eye_webcam = OT2Eye_WebCam(2, args)
+	ot2eye_webcam = OT2Eye_WebCam(args)
 
 
 	#
